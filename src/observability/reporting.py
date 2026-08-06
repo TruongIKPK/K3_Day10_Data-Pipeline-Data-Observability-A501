@@ -12,7 +12,7 @@ def generate_phase1_report(
     quality: dict[str, Any],
     freshness: dict[str, Any],
 ) -> None:
-    """TODO(student): viet markdown report cho baseline phase.
+    """Generate a Markdown report for the baseline phase.
 
     Pseudo-code:
     1. Gom source summary.

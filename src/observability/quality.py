@@ -9,7 +9,7 @@ from core.utils import now_utc, write_json
 
 
 def run_data_quality_checks(df: pd.DataFrame, settings: Settings, report_name: str) -> dict[str, Any]:
-    """TODO(student): tao bo data quality checks.
+    """Run data quality checks and persist a structured result.
 
     Pseudo-code:
     1. Check row count.
@@ -101,7 +101,7 @@ def run_data_quality_checks(df: pd.DataFrame, settings: Settings, report_name: s
 
 
 def build_freshness_report(df: pd.DataFrame, settings: Settings, report_path) -> dict[str, Any]:
-    """TODO(student): tong hop freshness report.
+    """Build and persist a freshness summary for a dataframe.
 
     Pseudo-code:
     1. Tim latest va oldest published date.
