@@ -4,22 +4,22 @@
 
 ## 1. Thông tin bài nộp
 
-| Thông tin         | Nội dung                  |
-| ------------------ | -------------------------- |
-| Khóa/Lớp         | [K3 hoặc K4]              |
-| Tên nhóm         | [Tên hoặc mã nhóm]     |
-| Repository         | [Đường dẫn repository] |
-| Ngày hoàn thành | [YYYY-MM-DD]               |
+| Thông tin         | Nội dung                                                                                                                                           |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Khóa/Lớp         | K3 - E403                                                                                                                                           |
+| Tên nhóm         | A5-01                                                                                                                                               |
+| Repository         | [github.com/TruongIKPK/K3_Day10_Data-Pipeline-Data-Observability-A501](https://github.com/TruongIKPK/K3_Day10_Data-Pipeline-Data-Observability-A501) |
+| Ngày hoàn thành | 2026-08-06                                                                                                                                          |
 
 ### Thành viên và phân công
 
-| STT | Họ và tên | MSSV | Vai trò chính | Module/deliverable sở hữu |
-| --: | --- | --- | --- | --- |
-| 1 | [Họ tên] | [MSSV] | [Vai trò] | [File, hàm hoặc artifact] |
-| 2 | [Họ tên] | [MSSV] | [Vai trò] | [File, hàm hoặc artifact] |
-| 3 | [Họ tên] | [MSSV] | [Vai trò] | [File, hàm hoặc artifact] |
-| 4 | [Nếu có] | [MSSV] | [Vai trò] | [File, hàm hoặc artifact] |
-| 5 | [Nếu có] | [MSSV] | [Vai trò] | [File, hàm hoặc artifact] |
+| STT | Họ và tên             | MSSV        | Vai trò chính                | Module/deliverable sở hữu                              |
+| --: | ------------------------ | ----------- | ------------------------------ | -------------------------------------------------------- |
+|   1 | Lê Nguyễn Phi Trường | 2A202601541 | Source Ingestion Owne          | `crossref.py`                                          |
+|   2 | Trần Duy Trường       | 2A202601247 | Data Observability Owne        | `quality.py`, `reporting.py`                         |
+|   3 | Nguyễn Khánh Toàn     | 2A202601843 | Corruption & Integration Owner | `corruption.py`, `phase1.py`, `corruption_flow.py` |
+|   4 | Hồ Văn Thi             | 2A202601907 | Data Model & Eval Set Owne     | `cleaning.py`, `testset.py`                          |
+|   5 | [Nếu có]               | [MSSV]      | [Vai trò]                     | [File, hàm hoặc artifact]                              |
 
 ## 2. Tóm tắt kết quả
 
