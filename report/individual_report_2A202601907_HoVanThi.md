@@ -144,23 +144,22 @@ type data\reports\phase1_report.md
 
 | Metric/signal          | Baseline | Corrupted | Repaired | Nhận xét của cá nhân                                                              |
 | ---------------------- | -------: | --------: | -------: | ---------------------------------------------------------------------------------- |
-| `retrieval_hit_rate` |      1.0 |       [ ] |      [ ] | Baseline hoàn hảo — `text_for_embedding` đủ ngữ nghĩa để match đúng top-1        |
-| `mean_token_f1`      |      1.0 |       [ ] |      [ ] | Agent trả lời khớp 100% với ground_truth (heuristic fallback judge)               |
-| `judge_accuracy`     |      1.0 |       [ ] |      [ ] | 16/16 câu đúng — judge dùng fallback heuristic vì LLM evaluator không khả dụng  |
-| `mean_judge_score`   |        5 |       [ ] |      [ ] | Score tối đa (5/5) trên toàn bộ 16 samples                                       |
-| Quality checks         |  9/9 PASS |       [ ] |      [ ] | Tất cả checks về completeness, validity, uniqueness, freshness đều PASS          |
-| Freshness status       |    FRESH |       [ ] |      [ ] | Latest paper: 2026-08-01, threshold 180 ngày, stale rows: 0                      |
+| `retrieval_hit_rate` |      1.0 |       0.5 |      1.0 | Corruption làm giảm 50% hit rate; repair phục hồi lại hoàn toàn (1.0).           |
+| `mean_token_f1`      |     0.75 |    0.3902 |     0.75 | Giảm mạnh do không lấy đúng context, phục hồi 100% về mức baseline (0.75) sau repair. |
+| `judge_accuracy`     |     0.75 |     0.375 |     0.75 | Tương quan trực tiếp với hit rate — sai context dẫn đến LLM trả lời sai.         |
+| `mean_judge_score`   |        4 |       2.5 |        4 | Điểm giảm 1.5 khi corrupted, trở lại mức baseline (4) sau repair.                  |
+| Quality checks         |  9/9 PASS |  5/9 PASS |  9/9 PASS | Corrupted fail 4 lỗi (paper_id_unique, title, summary, freshness); repair sửa hết.|
+| Freshness status       |    FRESH |   STALE  |    FRESH | Dữ liệu cũ bị phát hiện STALE, sau khi repair đã lấy lại data mới.               |
 
-> **Lưu ý:** Cột Corrupted và Repaired sẽ cập nhật sau khi `script/run_corruption_flow.py` hoàn tất.
-
-> **Về LLM judge:** `baseline_answers.json` ghi `"reasoning": "Fallback heuristic judge used because the LLM evaluator was unavailable."` — đây là do không có API key LLM judge được cấu hình. Score 1.0 phản ánh độ chính xác của heuristic (exact match / token overlap), không phải LLM evaluation thực sự.
+> **Về LLM judge:** `baseline_answers.json` ghi `"reasoning": "Fallback heuristic judge used because the LLM evaluator was unavailable."` — đây là do không có API key LLM judge được cấu hình. Score phản ánh độ chính xác của heuristic (exact match / token overlap), không phải LLM evaluation thực sự.
 
 ### Kết luận từ số liệu
 
-1. [Baseline sạch với 24 records đủ schema] → [9/9 quality checks PASS, freshness FRESH] → [retrieval_hit_rate = 1.0, agent trả lời đúng 16/16 câu] — xác nhận pipeline cleaning và testset builder của tôi tạo ra foundation chất lượng tốt.
-2. [Repair từ raw source] → [quality/freshness signal phục hồi] → [agent metric phục hồi về baseline] — sẽ kiểm chứng sau khi chạy corruption flow.
+1. [Baseline sạch với 24 records đủ schema] → [9/9 quality checks PASS, freshness FRESH] → [retrieval_hit_rate = 1.0] — xác nhận pipeline cleaning và testset builder của tôi tạo ra foundation chất lượng tốt.
+2. [Corruption tạo lỗi trên summary, title, id, date] → [Quality/Freshness báo FAIL/STALE, Retrieval giảm xuống 0.5, Accuracy giảm còn 0.375].
+3. [Repair từ raw source] → [quality/freshness signal phục hồi 9/9 PASS và FRESH] → [tất cả metrics của agent phục hồi 100% về baseline].
 
-Corruption nào ảnh hưởng rõ nhất: **Blank summary** — vì `text_for_embedding` phụ thuộc nhiều vào summary (chiếm phần lớn nội dung), khi bị blank thì vector embedding trở nên giống nhau và retrieval không phân biệt được paper đúng.
+Corruption nào ảnh hưởng rõ nhất: **Blank summary** (hoặc hỏng summary) — vì `text_for_embedding` phụ thuộc nhiều vào summary (chiếm phần lớn nội dung), khi bị blank thì vector embedding trở nên giống nhau và retrieval không phân biệt được paper đúng, dẫn đến hit rate rớt thảm hại (còn 0.5).
 
 Kết quả khác với kỳ vọng ban đầu: Tất cả 24 records từ Crossref đều không có `categories` (Crossref không expose subject categories như arXiv), nên toàn bộ dùng fallback `"Uncategorized"`. Điều này chứng minh fallback category trong `cleaning.py` là thiết yếu — nếu không có, `categories_joined` sẽ rỗng và `testset.py` lọc ra mọi paper, gây ValueError.
 
