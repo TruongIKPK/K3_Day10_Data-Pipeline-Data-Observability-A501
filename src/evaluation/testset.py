@@ -8,7 +8,7 @@ from core.utils import first_sentence, write_json
 
 
 def build_test_set(df: pd.DataFrame, output_path) -> list[dict[str, Any]]:
-    """TODO(student): tao bo evaluation set tu cleaned dataframe.
+    """Build and persist a deterministic evaluation set from clean data.
 
     Pseudo-code:
     1. Kiem tra so luong document toi thieu.
@@ -45,7 +45,7 @@ def build_test_set(df: pd.DataFrame, output_path) -> list[dict[str, Any]]:
     for row in candidates.to_dict(orient="records"):
         paper_id = str(row["paper_id"])
         title = str(row["title"])
-        title_for_question = title.replace("'", "?")
+        title_for_question = title.replace("'", chr(0x2019))
         prefix = f"the paper '{title_for_question}' (paper_id: {paper_id})"
         specs = [
             ("summary", f"What is the summary of {prefix}?", first_sentence(str(row["summary"]))),
