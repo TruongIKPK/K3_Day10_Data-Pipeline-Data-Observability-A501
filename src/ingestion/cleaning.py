@@ -11,7 +11,7 @@ from core.utils import compact_join, normalize_whitespace
 
 
 def build_clean_dataframe(records: list[PaperRecord], run_date: datetime) -> pd.DataFrame:
-    """TODO(student): clean raw records thanh dataframe san sang de embed.
+    """Normalize raw records into a deterministic embedding-ready dataframe.
 
     Pseudo-code:
     1. Normalize title, summary, authors, categories.
@@ -53,6 +53,8 @@ def build_clean_dataframe(records: list[PaperRecord], run_date: datetime) -> pd.
         age_days = (run_day - parsed_published.date()).days
         authors = clean_list(record.authors)
         categories = clean_list(record.categories)
+        if not categories:
+            categories = [clean_text(record.primary_category) or "Uncategorized"]
         authors_joined = compact_join(authors)
         categories_joined = compact_join(categories)
         text_for_embedding = normalize_whitespace(

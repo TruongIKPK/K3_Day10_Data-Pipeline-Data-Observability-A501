@@ -29,7 +29,7 @@ class PaperRecord:
 
 
 def parse_crossref_payload(payload: dict) -> list[PaperRecord]:
-    """TODO(student): parse Crossref payload thanh list PaperRecord.
+    """Parse a Crossref payload into validated PaperRecord objects.
 
     Pseudo-code:
     1. Duyet `payload["message"]["items"]`.
@@ -144,7 +144,7 @@ def parse_crossref_payload(payload: dict) -> list[PaperRecord]:
 
 
 def fetch_source_records(settings: Settings) -> list[PaperRecord]:
-    """TODO(student): goi source API, luu raw response, parse thanh records.
+    """Fetch, snapshot, parse and persist Crossref records.
 
     Pseudo-code:
     1. Tao params tu `settings.source_query`, `settings.source_filter`, `settings.max_results`.
@@ -193,7 +193,7 @@ def fetch_source_records(settings: Settings) -> list[PaperRecord]:
 
 
 def load_raw_records(path: Path) -> list[PaperRecord]:
-    """TODO(student): doc JSON snapshot va map thanh `PaperRecord`."""
+    """Load a raw-record JSON snapshot into PaperRecord objects."""
     payload = read_json(path)
     if not isinstance(payload, list):
         raise ValueError(f"Raw records at {path} must be a JSON list.")
