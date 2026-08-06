@@ -12,7 +12,7 @@ from retrieval.agent import build_agent, run_agent_question
 from retrieval.index import LocalEmbeddingIndex
 
 def main() -> None:
-    """TODO(student): xay dung baseline pipeline end-to-end.
+    """Run the baseline ingestion, indexing, evaluation and observability flow.
 
     Pseudo-code:
     1. Load settings.
