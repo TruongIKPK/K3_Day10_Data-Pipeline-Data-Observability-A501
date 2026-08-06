@@ -9,16 +9,16 @@
 | Filter | from-pub-date:2026-02-07,has-abstract:true |
 | Records fetched | 24 |
 | Clean rows | 24 |
-| Run date | 2026-08-06T03:21:42.846499+00:00 |
+| Run date | 2026-08-06T04:52:10.336623+00:00 |
 
 ## Evaluation metrics
 
 | Metric | Value |
 | --- | ---: |
 | `retrieval_hit_rate` | 1.0 |
-| `mean_token_f1` | 1.0 |
-| `judge_accuracy` | 1.0 |
-| `mean_judge_score` | 5 |
+| `mean_token_f1` | 0.75 |
+| `judge_accuracy` | 0.75 |
+| `mean_judge_score` | 4 |
 | `ragas` | skipped |
 
 ## Data quality
