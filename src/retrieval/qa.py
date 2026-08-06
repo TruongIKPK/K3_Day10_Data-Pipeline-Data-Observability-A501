@@ -30,8 +30,11 @@ def _extract_answer(question: str, top_result: SearchResult) -> str:
 
 
 def answer_question(question: str, settings: Settings, index: LocalEmbeddingIndex, top_k: int | None = None) -> AnswerResult:
-    title_match = re.search(r"'([^']+)'", question)
-    exact = index.lookup(title_match.group(1)) if title_match else None
+    paper_id_match = re.search(r"paper_id\s*:\s*([^'\s)]+)", question, flags=re.IGNORECASE)
+    title_match = re.search(r"'([^']+)'|\"([^\"]+)\"", question)
+    exact = index.lookup(paper_id_match.group(1)) if paper_id_match else None
+    if exact is None and title_match:
+        exact = index.lookup(title_match.group(1) or title_match.group(2))
     retrieved = index.search(question, top_k=top_k)
     if exact:
         exact_result = SearchResult(
