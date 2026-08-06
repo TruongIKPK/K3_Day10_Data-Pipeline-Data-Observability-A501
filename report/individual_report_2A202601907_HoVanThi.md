@@ -37,9 +37,9 @@ Phần việc của tôi nằm ở giữa pipeline: nhận raw records từ Thà
 | Implement pipeline làm sạch raw records thành DataFrame    | `src/ingestion/cleaning.py` / `build_clean_dataframe` | DataFrame với 16 cột theo Clean Schema        | Kiểm tra cột bằng `df.columns`, kiểm tra `df.shape` |
 | Normalize title, summary, authors, categories, HTML entity | `clean_text()`, `clean_list()` trong cleaning.py      | Text sạch, không HTML tag, whitespace chuẩn   | Đọc `data/clean/clean_records.csv`                   |
 | Tính `age_days`, `text_for_embedding`, dedup               | `build_clean_dataframe()`                             | DataFrame đã sort, dedup theo `paper_id`       | Kiểm tra `paper_id` unique, sort theo `published`    |
-| Tạo evaluation set với 4 loại câu hỏi                     | `src/evaluation/testset.py` / `build_test_set`        | `data/eval/testset.json` (≥16 samples)        | `cat data/eval/testset.json` và kiểm tra schema     |
+| Tạo evaluation set với 4 loại câu hỏi                     | `src/evaluation/testset.py` / `build_test_set`        | `data/eval/testset.json` (16 samples)         | `type data\eval\testset.json` và kiểm tra schema   |
 
-**Output cụ thể:** File `data/eval/testset.json` chứa 16 câu hỏi (4 paper × 4 loại: summary, authors, date, categories), mỗi sample có đủ `id`, `question_type`, `question`, `ground_truth`, `ground_truth_doc_ids`. Đây là artifact cố định dùng chung cho cả ba trạng thái baseline, corrupted và repaired.
+**Output cụ thể:** File `data/eval/testset.json` chứa **16 câu hỏi** (4 paper × 4 loại: summary, authors, date, categories), mỗi sample có đủ `id`, `question_type`, `question`, `ground_truth`, `ground_truth_doc_ids`. Ví dụ paper đầu tiên: `10.1111/exsy.70341` (Hi‐RAG framework, tác giả Wei Tian & Yuhao Zhou, published 2026-08-01). Pipeline đã clean thành công **24 records** từ Crossref API (query: *agentic retrieval augmented generation large language model*, filter: from-pub-date:2026-02-07). Đây là artifact cố định dùng chung cho cả ba trạng thái baseline, corrupted và repaired.
 
 ## 4. Giải thích phần kỹ thuật đã thực hiện
 
@@ -79,35 +79,20 @@ Raw records từ Crossref API chứa nhiễu: HTML entities (`&amp;`, `&lt;`), H
 
 ### Cách xác minh
 
-```bash
-# Kiểm tra cleaning.py tích hợp đúng schema
-uv run python -c "
-from ingestion.crossref import PaperRecord
-from ingestion.cleaning import build_clean_dataframe
-from datetime import datetime
+```powershell
+# Chạy baseline pipeline đầy đủ
+uv run python script/run_phase1.py
 
-records = [PaperRecord(
-    paper_id='10.1234/test',
-    title='<b>Test &amp; Paper</b>',
-    summary='A test summary sentence. More details here.',
-    authors=['Alice', 'Bob'],
-    categories=['cs.AI', 'cs.LG'],
-    primary_category='cs.AI',
-    published='2024-01-15',
-    updated='2024-01-20',
-    abs_url='https://example.com/abs',
-    pdf_url='https://example.com/pdf',
-    comment=''
-)]
-df = build_clean_dataframe(records, datetime(2024, 6, 1))
-print(df.columns.tolist())
-print(df[['paper_id','title','age_days']].to_string())
-"
+# Đọc metrics kết quả
+type data\results\baseline_metrics.json
+
+# Đọc phase1 report
+type data\reports\phase1_report.md
 ```
 
-- **Kết quả mong đợi:** DataFrame 1 row, cột `title` = `"Test & Paper"` (HTML decoded), `age_days` = 138.
-- **Kết quả thực tế:** Khớp với mong đợi — HTML entities và tags được loại bỏ đúng, `age_days` tính chính xác.
-- **Artifact/log:** `data/clean/clean_records.csv` (sinh ra khi chạy `script/run_phase1.py`).
+- **Kết quả mong đợi:** 24 records fetched, 24 clean rows, testset 16 samples, tất cả quality checks PASS, freshness FRESH.
+- **Kết quả thực tế:** Đúng như mong đợi — `data/results/baseline_metrics.json` ghi nhận `retrieval_hit_rate: 1.0`, `mean_token_f1: 1.0`, `judge_accuracy: 1.0`, `mean_judge_score: 5`. Phase1 report xác nhận tất cả 9 quality checks PASS và freshness FRESH (latest paper: 2026-08-01, threshold: 180 days, stale rows: 0).
+- **Artifact/log:** `data/clean/clean_records.csv`, `data/eval/testset.json`, `data/results/baseline_metrics.json`, `data/reports/phase1_report.md`.
 
 ## 5. Một quyết định kỹ thuật quan trọng
 
@@ -157,25 +142,27 @@ print(df[['paper_id','title','age_days']].to_string())
 
 ### Metrics chính
 
-| Metric/signal          | Baseline | Corrupted | Repaired | Nhận xét của cá nhân                                          |
-| ---------------------- | -------: | --------: | -------: | -------------------------------------------------------------- |
-| `retrieval_hit_rate` |      [ ] |       [ ] |      [ ] | Dự kiến giảm khi summary bị blank hoặc noisy                 |
-| `mean_token_f1`      |      [ ] |       [ ] |      [ ] | Phụ thuộc nhiều vào chất lượng `text_for_embedding`          |
-| `judge_accuracy`     |      [ ] |       [ ] |      [ ] | LLM judge nhạy với nội dung summary bị corruption             |
-| `mean_judge_score`   |      [ ] |       [ ] |      [ ] | Score thấp khi ground_truth không khớp với context retrieval |
-| Quality checks         |      [ ] |       [ ] |      [ ] | Completeness check sẽ fail khi summary bị blank              |
-| Freshness status       |      [ ] |       [ ] |      [ ] | Fail khi publication date bị làm stale                       |
+| Metric/signal          | Baseline | Corrupted | Repaired | Nhận xét của cá nhân                                                              |
+| ---------------------- | -------: | --------: | -------: | ---------------------------------------------------------------------------------- |
+| `retrieval_hit_rate` |      1.0 |       [ ] |      [ ] | Baseline hoàn hảo — `text_for_embedding` đủ ngữ nghĩa để match đúng top-1        |
+| `mean_token_f1`      |      1.0 |       [ ] |      [ ] | Agent trả lời khớp 100% với ground_truth (heuristic fallback judge)               |
+| `judge_accuracy`     |      1.0 |       [ ] |      [ ] | 16/16 câu đúng — judge dùng fallback heuristic vì LLM evaluator không khả dụng  |
+| `mean_judge_score`   |        5 |       [ ] |      [ ] | Score tối đa (5/5) trên toàn bộ 16 samples                                       |
+| Quality checks         |  9/9 PASS |       [ ] |      [ ] | Tất cả checks về completeness, validity, uniqueness, freshness đều PASS          |
+| Freshness status       |    FRESH |       [ ] |      [ ] | Latest paper: 2026-08-01, threshold 180 ngày, stale rows: 0                      |
 
-> **Lưu ý:** Các giá trị cụ thể chưa có do pipeline chưa chạy đến bước evaluation cuối. Sẽ cập nhật sau khi `script/run_phase1.py` và `script/run_corruption_flow.py` hoàn tất.
+> **Lưu ý:** Cột Corrupted và Repaired sẽ cập nhật sau khi `script/run_corruption_flow.py` hoàn tất.
+
+> **Về LLM judge:** `baseline_answers.json` ghi `"reasoning": "Fallback heuristic judge used because the LLM evaluator was unavailable."` — đây là do không có API key LLM judge được cấu hình. Score 1.0 phản ánh độ chính xác của heuristic (exact match / token overlap), không phải LLM evaluation thực sự.
 
 ### Kết luận từ số liệu
 
-1. [Blank summary corruption] → [completeness quality check Fail] → [retrieval_hit_rate giảm vì embedding không còn đủ context để match câu hỏi về summary].
-2. [Repair từ raw source] → [summary được phục hồi, completeness Pass] → [retrieval_hit_rate phục hồi vì embedding lại có đủ nội dung].
+1. [Baseline sạch với 24 records đủ schema] → [9/9 quality checks PASS, freshness FRESH] → [retrieval_hit_rate = 1.0, agent trả lời đúng 16/16 câu] — xác nhận pipeline cleaning và testset builder của tôi tạo ra foundation chất lượng tốt.
+2. [Repair từ raw source] → [quality/freshness signal phục hồi] → [agent metric phục hồi về baseline] — sẽ kiểm chứng sau khi chạy corruption flow.
 
-Corruption nào ảnh hưởng rõ nhất: **Blank summary** — vì `text_for_embedding` phụ thuộc nhiều vào summary, khi bị blank thì vector embedding trở nên gần nhau và không phân biệt được các paper, khiến retrieval sai.
+Corruption nào ảnh hưởng rõ nhất: **Blank summary** — vì `text_for_embedding` phụ thuộc nhiều vào summary (chiếm phần lớn nội dung), khi bị blank thì vector embedding trở nên giống nhau và retrieval không phân biệt được paper đúng.
 
-Kết quả khác với kỳ vọng: Cần chạy thực tế để xác nhận. Giả thuyết: thêm noise vào summary có thể không ảnh hưởng nhiều bằng blank hoàn toàn vì embedding model có thể vẫn capture được tín hiệu.
+Kết quả khác với kỳ vọng ban đầu: Tất cả 24 records từ Crossref đều không có `categories` (Crossref không expose subject categories như arXiv), nên toàn bộ dùng fallback `"Uncategorized"`. Điều này chứng minh fallback category trong `cleaning.py` là thiết yếu — nếu không có, `categories_joined` sẽ rỗng và `testset.py` lọc ra mọi paper, gây ValueError.
 
 ## 9. Điều học được và hướng cải thiện
 
